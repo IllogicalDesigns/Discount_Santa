@@ -15,6 +15,7 @@ public class PlayerMove : MonoBehaviour {
 	private Animator m_Anim; 																	//The strings that play me like a fiddle
 	private Transform m_GroundCheck;															//Where should ground be?
 	private Vector3 lastCheckPioint;
+	public InventoryAndEffects myInventoryAndEffects;
 
 	private void Awake()
 	{
@@ -22,17 +23,32 @@ public class PlayerMove : MonoBehaviour {
 		m_Rigidbody2D = GetComponent<Rigidbody2D>();											//What Ridgid our we? Ok write that down
 		m_GroundCheck = transform.Find("GroundCheck");											//We cheack for ground somewhere and we write this down too.
 		lastCheckPioint = transform.position;
+		myInventoryAndEffects = GetComponent<InventoryAndEffects> ();
 
 	}
 
-	void OnTriggerStay2D(Collider2D other) {
+	void OnTriggerEnter2D(Collider2D other) {
 		if (other.tag == "Danger") {
 			transform.position = lastCheckPioint;
+			GameObject[] myGameObj = GameObject.FindGameObjectsWithTag ("RedDrool");
+			for (int i = 0; i < myGameObj.Length; i++) {
+				myGameObj [i].GetComponent<Pickup> ().ResetMe ();								//FIX_ME replace this with A brodcast message and readers
+			}
+			myInventoryAndEffects.redDrool = 0;
 		}
+		if (other.tag == "RedDrool") {
+			myInventoryAndEffects.redDrool++;
+			other.gameObject.GetComponent<Pickup> ().HideMe ();
+		}
+			
 	}
 
 	void Update () {
-		if (m_Grounded && Input.GetButtonDown ("Jump")) {
+		if (myInventoryAndEffects.redDrool != 0 && !m_Grounded && !m_Anim.GetBool("Ground") && Input.GetButtonDown("Jump")) {
+			jump ();
+			myInventoryAndEffects.redDrool--;
+		}
+		if (m_Grounded && m_Anim.GetBool("Ground") && Input.GetButtonDown ("Jump")) {
 			jump ();
 		}
 	}
@@ -52,12 +68,9 @@ public class PlayerMove : MonoBehaviour {
 	}
 
 	void jump () {
-		if (m_Grounded && m_Anim.GetBool("Ground"))
-		{
 			m_Grounded = false;
 			m_Anim.SetBool("Ground", false);
 			m_Rigidbody2D.AddForce(new Vector2(0f, m_JumpForce));
-		}
 	}
 
 	void Move (float h) {
