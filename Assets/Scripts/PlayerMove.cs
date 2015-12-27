@@ -11,11 +11,11 @@ public class PlayerMove : MonoBehaviour {
 	private bool m_Grounded;																	//Our we down to earth?
 	private Rigidbody2D m_Rigidbody2D;															//What ridgidbody our we
 	private bool m_FacingRight = true;															//What if we are facing left? keep track of that
-	private float k_GroundedRadius = 2f;														//Look How far?
+	[SerializeField] private float k_GroundedRadius = 0.2f;										//Look How far?
 	private Animator m_Anim; 																	//The strings that play me like a fiddle
 	private Transform m_GroundCheck;															//Where should ground be?
 	private Vector3 lastCheckPioint;
-	public InventoryAndEffects myInventoryAndEffects;
+	private InventoryAndEffects myInventoryAndEffects;
 
 	private void Awake()
 	{
@@ -30,9 +30,13 @@ public class PlayerMove : MonoBehaviour {
 	void OnTriggerEnter2D(Collider2D other) {
 		if (other.tag == "Danger") {
 			transform.position = lastCheckPioint;
-			GameObject[] myGameObj = GameObject.FindGameObjectsWithTag ("RedDrool");
-			for (int i = 0; i < myGameObj.Length; i++) {
-				myGameObj [i].GetComponent<Pickup> ().ResetMe ();								//FIX_ME replace this with A brodcast message and readers
+			GameObject[] myGameObjs = GameObject.FindGameObjectsWithTag ("RedDrool");
+			GameObject[] myDeletObjs = GameObject.FindGameObjectsWithTag ("Deletable");
+			for (int i = 0; i < myGameObjs.Length; i++) {
+				myGameObjs [i].GetComponent<Pickup> ().ResetMe ();								//FIX_ME replace this with A brodcast message and readers
+			}
+			for (int i = 0; i < myDeletObjs.Length; i++) {
+				Destroy (myDeletObjs [i].gameObject);											//FIX_ME replace this with A brodcast message and readers
 			}
 			myInventoryAndEffects.redDrool = 0;
 		}
@@ -47,6 +51,7 @@ public class PlayerMove : MonoBehaviour {
 		if (myInventoryAndEffects.redDrool != 0 && !m_Grounded && !m_Anim.GetBool("Ground") && Input.GetButtonDown("Jump")) {
 			jump ();
 			myInventoryAndEffects.redDrool--;
+			myInventoryAndEffects.ejectObj ("RedDrool");
 		}
 		if (m_Grounded && m_Anim.GetBool("Ground") && Input.GetButtonDown ("Jump")) {
 			jump ();
